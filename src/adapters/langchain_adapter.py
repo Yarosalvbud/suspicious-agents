@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from contextlib import asynccontextmanager
-from typing import Any
 from typing import AsyncIterator
 from typing import override
 
@@ -16,6 +15,7 @@ from langchain_mcp_adapters.tools import load_mcp_tools
 from mcp.client.session import ClientSession
 
 from base_client.base_client import McpClient
+from base_client.base_client import Tool
 
 
 class LangchainMcpAdapter(McpClient):
@@ -48,10 +48,10 @@ class LangchainMcpAdapter(McpClient):
         return self
 
     @override
-    async def list_tools(self) -> list[dict[str, Any]]:
+    async def list_tools(self) -> list[Tool]:
         langchain_tools: list[BaseTool] = await self.client.get_tools(server_name=self._server_name)
 
-        return [{"name": tool.name, "description": tool.description, "args": tool.args} for tool in langchain_tools]
+        return [Tool(name=tool.name, description=tool.description, args=tool.args) for tool in langchain_tools]
 
     @override
     async def resources(self, urls: list[str]) -> list[str | bytes | None]:
@@ -60,7 +60,7 @@ class LangchainMcpAdapter(McpClient):
         return [blob.data for blob in blobs]
 
     @override
-    async def prompt(self, prompt_name: str, params: dict[str, Any]) -> list[str]:
+    async def prompt(self, prompt_name: str, params: dict[str, str]) -> list[str]:
         prompts: list[AIMessage | HumanMessage] = await self.client.get_prompt(
             server_name=self._server_name, prompt_name=prompt_name, arguments=params
         )
@@ -71,7 +71,7 @@ class LangchainMcpAdapter(McpClient):
         return await self.client.get_tools(server_name=self._server_name)
 
     @override
-    async def call_tool(self, tool_name: str, params: dict[str, Any]) -> Any:
+    async def call_tool(self, tool_name: str, params: dict[str, str]) -> object:
         tools: list[BaseTool] = await self._list_tools()
         tool = next(tool for tool in tools if tool.name == tool_name)
 

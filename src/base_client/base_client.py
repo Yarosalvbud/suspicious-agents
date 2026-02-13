@@ -6,6 +6,14 @@ from contextlib import asynccontextmanager
 from typing import Any
 from typing import AsyncIterator
 
+from pydantic import BaseModel
+
+
+class Tool(BaseModel):
+    name: str
+    description: str
+    args: dict[str, str]
+
 
 class McpClient(ABC):
     @classmethod
@@ -16,7 +24,7 @@ class McpClient(ABC):
         pass
 
     @abstractmethod
-    async def list_tools(self) -> list[dict[str, Any]]:
+    async def list_tools(self) -> list[Tool]:
         pass
 
     @abstractmethod
@@ -24,11 +32,11 @@ class McpClient(ABC):
         pass
 
     @abstractmethod
-    async def prompt(self, prompt_name: str, params: dict[str, Any]) -> list[str]:
+    async def prompt(self, prompt_name: str, params: dict[str, str]) -> list[str]:
         pass
 
     @abstractmethod
-    async def call_tool(self, tool_name: str, params: dict[str, Any]) -> Any:
+    async def call_tool(self, tool_name: str, params: dict[str, str]) -> object:
         pass
 
     @abstractmethod

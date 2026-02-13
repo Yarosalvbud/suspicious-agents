@@ -44,12 +44,22 @@ class NifiServerService:
 
         raise ValueError("Wrong log data format, expected str")
 
-    async def processors(self) -> list[dict[str, Any]]:
+    async def processors(self) -> list[dict[str, str]]:
         processors_raw = await self._client.call_tool(self._PROCESSORS, {})
+
+        if not isinstance(processors_raw, list):
+            raise ValueError("Could not parse processors data."
+                             f"Expected type list, got: {type(processors_raw).__name__}")
+
         return [json.loads(elem["text"]) for elem in processors_raw]
 
-    async def connections(self) -> list[dict[str, Any]]:
+    async def connections(self) -> list[dict[str, str]]:
         connections_raw = await self._client.call_tool(self._CONNECTIONS, {})
+        if not isinstance(connections_raw, list):
+            raise ValueError("Could not parse processors data."
+                             f"Expected type list, got: {type(connections_raw).__name__}")
+
+
         return json.loads(connections_raw[0]["text"])["connections"]
 
     async def agent_prompt(self, processors_desc: str, error: str, connections: str) -> str:

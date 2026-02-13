@@ -78,8 +78,8 @@ class NifiGraph(StateGraph[FlowState]):
         service: NifiServerService = _settings.service
 
         log_data: list[str] = await service.get_log_errors()
-        processors_data: list[dict[str, Any]] = await service.processors()
-        conn_data: list[dict[str, Any]] = await service.connections()
+        processors_data: list[dict[str, str]] = await service.processors()
+        conn_data: list[dict[str, str]] = await service.connections()
 
         return {"error": log_data, "processors_data": processors_data, "connections": conn_data, "nifi_flow_fix": []}
 
