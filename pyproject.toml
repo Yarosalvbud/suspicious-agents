@@ -1,0 +1,143 @@
+[project]
+name = "mcp-client"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "anthropic>=0.76.0",
+    "langchain>=1.2.7",
+    "langchain-mcp-adapters>=0.2.1",
+    "langchain-together>=0.0.2.post1",
+    "langgraph>=1.0.7",
+    "mcp>=1.26.0",
+    "mypy>=1.19.1",
+    "pidantic>=0.1.2",
+    "pre-commit>=4.5.1",
+    "python-dotenv>=1.2.1",
+    "structlog>=25.5.0",
+]
+
+[tool.mypy]
+explicit_package_bases = true
+mypy_path = "src"
+namespace_packages = true
+plugins = ["pydantic.mypy"]
+check_untyped_defs = true
+disallow_any_generics = true
+disallow_incomplete_defs = true
+disallow_untyped_defs = true
+no_implicit_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+no_implicit_reexport = true
+
+[tool.pydantic-mypy]
+init_forbid_extra = true
+init_typed = true
+warn_required_dynamic_aliases = true
+
+[[tool.mypy.overrides]]
+module = [
+    "dynaconf",
+    "keycloak",
+    "scipy.*",
+    "prometheus_api_client",
+    "clearml",
+    "matplotlib",
+    "yaml",
+    "atlassian",
+    "urllib3.*",
+    "requests.exceptions",
+    "google.protobuf.*",
+    "requests.*",
+    "kubernetes_asyncio.*",
+    "tritonclient.*",
+    "log_kit.*",
+    "aiohttp.*",
+    "pandas",
+    "tqdm.*",
+    "sklearn.*",
+    "lxml.*",
+    "apscheduler.*",
+    "ffmpeg.*",
+]
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = [
+    "src.proto_source.crt.*",
+    "src.proto_source.mts.*",
+    "src.proto_source.sber.*",
+    "log_kit.*"
+]
+disable_error_code = [
+    "attr-defined",
+    "name-defined",
+    "import",
+    "no-untyped-def",
+    "arg-type",
+    "type-arg",
+    "var-annotated",
+    "misc"
+]
+
+[tool.ruff]
+target-version = "py312" # Обновлено до 3.12, так как в requires-python указано >=3.12
+line-length = 120
+exclude = [
+    "config/*", "data/*", "proto/*", "reports/*",
+    "schedule_params/*",
+    "src/proto_source/*"
+]
+
+[tool.ruff.lint]
+select = [
+    "A",   # flake8-builtins
+    "B",   # flake8-bugbear
+    "C4",  # flake8-comprehensions
+    "ERA", # flake8-eradicate
+    "RET", # flake8-return
+    "PLR", # Pylint
+    "I",   # isort
+    "N",   # pep8-naming
+    "E",   # pycodestyle errors
+    "PIE", # flake8-pie
+    "PGH", # pygrep-hooks
+    "RUF", # ruff-specific rules
+    "SIM", # flake8-simplify
+    "TID", # flake8-tidy-imports
+    "F",   # pyflakes
+    "UP"   # pyupgrade
+]
+ignore = [
+    "B904",  # raise ... from err
+    "B905",  # zip(strict=True)
+    "N818",  # Exception name should be named with an Error suffix
+    "UP035", # typing vs collections.abc
+    "RUF006" # asyncio.create_task reference
+]
+unfixable = [
+    "ERA" # do not autoremove commented out code
+]
+
+[tool.ruff.lint.flake8-tidy-imports]
+ban-relative-imports = "all"
+
+[tool.ruff.lint.isort]
+force-single-line = true
+lines-between-types = 1
+lines-after-imports = 2
+required-imports = ["from __future__ import annotations"]
+
+[tool.ruff.lint.pylint]
+max-args = 5
+max-returns = 6
+max-branches = 12
+max-statements = 50
+
+[tool.ruff.lint.flake8-type-checking]
+exempt-modules = ["typing", "typing_extensions"]
+
+[tool.ruff.format]
+exclude = ["*.pyi"]
