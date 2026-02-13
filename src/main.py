@@ -3,15 +3,11 @@ from __future__ import annotations
 import asyncio
 import sys
 
-from typing import cast
-
 from langchain_together import ChatTogether
-from langgraph.graph.state import CompiledStateGraph
 
 from adapters.langchain_adapter import LangchainMcpAdapter
 from base_client.base_client import McpClient
 from graphs.nifi_graph import NifiGraph
-from graphs.state.state import FlowState
 from managers.nifi_manager import NifiGraphManager
 from managers.settings.nifi_agent_settings import NifiAgentSettings
 from services.nifi_server_service import NifiServerService
@@ -49,7 +45,7 @@ async def main() -> None:
             NIFI_BASE_URL=settings.NIFI_BASE_URL,
         )
 
-    graph = cast(CompiledStateGraph[FlowState, None, FlowState, FlowState], NifiGraph().compile())
+    graph = NifiGraph().generate_graph()
     manager: NifiGraphManager = NifiGraphManager(graph)
     service: NifiServerService = NifiServerService(client)
 
