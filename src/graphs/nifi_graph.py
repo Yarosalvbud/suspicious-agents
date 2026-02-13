@@ -11,9 +11,6 @@ from typing import cast
 from typing import final
 from typing import override
 
-from graphs.prompts.prompts import oss_sytem_prompt
-from graphs.prompts.prompts import previus_steps
-from graphs.state.state import FlowState
 from langchain.agents import create_agent
 from langchain.agents.middleware import AgentMiddleware
 from langchain.messages import ToolMessage
@@ -32,6 +29,10 @@ from langgraph.graph import StateGraph
 from langgraph.graph.state import CompiledStateGraph
 from langgraph.types import Command
 from langgraph.types import RetryPolicy
+
+from graphs.prompts.prompts import oss_sytem_prompt
+from graphs.prompts.prompts import previus_steps
+from graphs.state.state import FlowState
 from logger import logger
 from managers.settings.nifi_agent_settings import NifiAgentSettings
 from services.nifi_server_service import NifiServerService
@@ -121,7 +122,7 @@ class NifiGraph(StateGraph[FlowState]):
                 raise TypeError(f"Expected a list of tools, but got {type(tools).__name__}")
 
             tools = self._filter_agent_tools(tools, service)
-            agent = create_agent(model=llm, tools=tools, middleware=[self._middleware])
+            agent = create_agent(model=llm, tools=tools, middleware=[self._middleware])  # type: ignore[var-annotated]
 
             response = await agent.ainvoke({"messages": messages})  # type: ignore[arg-type]
             tool_calls: list[ToolCall] = self._response_tool_calls(response, state, service)

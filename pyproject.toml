@@ -141,3 +141,8 @@ exempt-modules = ["typing", "typing_extensions"]
 
 [tool.ruff.format]
 exclude = ["*.pyi"]
+
+[dependency-groups]
+dev = [
+    "ruff>=0.15.1",
+]

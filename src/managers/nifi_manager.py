@@ -4,12 +4,13 @@ from typing import cast
 from typing import final
 from typing import override
 
-from graphs.state.state import FlowState
 from langchain_core.runnables import RunnableConfig
 from langgraph.graph.state import CompiledStateGraph
+from pydantic import BaseModel
+
+from graphs.state.state import FlowState
 from managers.base_manager import BaseManager
 from managers.settings.nifi_agent_settings import NifiAgentSettings
-from pydantic import BaseModel
 
 
 @final

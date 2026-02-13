@@ -5,7 +5,6 @@ from typing import Any
 from typing import AsyncIterator
 from typing import override
 
-from base_client.base_client import McpClient
 from langchain_core.documents.base import Blob
 from langchain_core.messages import AIMessage
 from langchain_core.messages import HumanMessage
@@ -15,6 +14,8 @@ from langchain_mcp_adapters.client import MultiServerMCPClient
 from langchain_mcp_adapters.sessions import StdioConnection
 from langchain_mcp_adapters.tools import load_mcp_tools
 from mcp.client.session import ClientSession
+
+from base_client.base_client import McpClient
 
 
 class LangchainMcpAdapter(McpClient):
