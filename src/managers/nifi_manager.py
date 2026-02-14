@@ -8,7 +8,7 @@ from langchain_core.runnables import RunnableConfig
 from langgraph.graph.state import CompiledStateGraph
 from pydantic import BaseModel
 
-from graphs.state.state import FlowState
+from graphs.state.nifi_graph_state import FlowState
 from managers.base_manager import BaseManager
 from managers.settings.nifi_agent_settings import NifiAgentSettings
 

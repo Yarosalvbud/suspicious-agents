@@ -30,9 +30,9 @@ from langgraph.graph.state import CompiledStateGraph
 from langgraph.types import Command
 from langgraph.types import RetryPolicy
 
-from graphs.prompts.prompts import oss_sytem_prompt
-from graphs.prompts.prompts import previus_steps
-from graphs.state.state import FlowState
+from graphs.prompts.nifi_graph_prompts import oss_sytem_prompt
+from graphs.prompts.nifi_graph_prompts import previus_steps
+from graphs.state.nifi_graph_state import FlowState
 from logger import logger
 from managers.settings.nifi_agent_settings import NifiAgentSettings
 from services.nifi_server_service import NifiServerService

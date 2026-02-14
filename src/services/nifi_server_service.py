@@ -8,7 +8,7 @@ from typing import AsyncIterator
 from typing import Final
 from typing import final
 
-from base_client.base_client import McpClient
+from client.base_client import McpClient
 
 
 @final

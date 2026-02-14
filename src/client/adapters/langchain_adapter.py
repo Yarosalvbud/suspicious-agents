@@ -14,10 +14,12 @@ from langchain_mcp_adapters.sessions import StdioConnection
 from langchain_mcp_adapters.tools import load_mcp_tools
 from mcp.client.session import ClientSession
 
-from base_client.base_client import McpClient
-from base_client.base_client import Tool
+from client.base_client import McpClient
+from client.base_client import Tool
+from client.client_solution.mcp_client_solution import McpClientSolution
 
 
+@McpClientSolution.register("nifi")
 class LangchainMcpAdapter(McpClient):
     def __init__(self, server_name: str) -> None:
         super().__init__()

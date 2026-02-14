@@ -5,8 +5,8 @@ import sys
 
 from langchain_together import ChatTogether
 
-from adapters.langchain_adapter import LangchainMcpAdapter
-from base_client.base_client import McpClient
+import client as clnt
+
 from graphs.nifi_graph import NifiGraph
 from managers.nifi_manager import NifiGraphManager
 from managers.settings.nifi_agent_settings import NifiAgentSettings
@@ -19,9 +19,10 @@ async def main() -> None:
     if num_params not in (settings.CLIENT_MIN_PARAMS, settings.CLIENT_MAX_PARAMS):
         raise RuntimeError("Usage: python3 <path-to-client> <nifi-server-path> <nifi-server-working-directory>")
 
-    client: McpClient | None = None
+    client: clnt.McpClient | None = None
     if num_params == settings.CLIENT_MIN_PARAMS:
-        client = await LangchainMcpAdapter.connect(
+        client = await clnt.McpClientSolution.get_client(
+            name="nifi",
             server_name="nifi",
             server_script_path=sys.argv[1],
             cwd=None,
@@ -33,7 +34,8 @@ async def main() -> None:
             NIFI_BASE_URL=settings.NIFI_BASE_URL,
         )
     else:
-        client = await LangchainMcpAdapter.connect(
+        client = await clnt.McpClientSolution.get_client(
+            name="nifi",
             server_name="nifi",
             server_script_path=sys.argv[1],
             cwd=sys.argv[2],
