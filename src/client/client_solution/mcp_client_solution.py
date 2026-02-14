@@ -29,7 +29,7 @@ class McpClientSolution:
         client = cls._clients.get(name.lower())
 
         if not client:
-            raise ValueError(
+            raise KeyError(
                 f"Client '{name}' not found."
             )
 

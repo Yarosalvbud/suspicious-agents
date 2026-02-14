@@ -7,7 +7,6 @@ from collections.abc import Awaitable
 from collections.abc import Callable
 from typing import Any
 from typing import Literal
-from typing import cast
 from typing import final
 from typing import override
 
@@ -56,7 +55,7 @@ class ToolMonitoringMiddleware(AgentMiddleware):
 
 
 @final
-class NifiGraph(StateGraph[FlowState]):
+class NifiGraph(StateGraph[FlowState, None, FlowState, FlowState]):
     def __init__(self, config_schema: type[None] | None = None) -> None:
         super().__init__(FlowState, config_schema)
         self._middleware = ToolMonitoringMiddleware()
@@ -85,10 +84,10 @@ class NifiGraph(StateGraph[FlowState]):
         processors_data: list[dict[str, str]] = await service.processors()
         conn_data: list[dict[str, str]] = await service.connections()
 
-        return {"error": log_data, "processors_data": processors_data, "connections": conn_data, "nifi_flow_fix": []}
+        return FlowState(error=log_data, processors_data=processors_data, connections=conn_data)
 
     def _should_continue(self, state: FlowState) -> Literal["flow_correction"] | object:
-        if len(state["error"]) == 1 and not state["error"][0]:
+        if len(state.error) == 1 and not state.error[0]:
             return END
 
         return "flow_correction"
@@ -99,15 +98,17 @@ class NifiGraph(StateGraph[FlowState]):
         llm: BaseChatModel = _settings.llm
 
         prompt: str = await service.agent_prompt(
-            json.dumps(state["processors_data"], indent=2),
-            json.dumps(state["error"], indent=2),
-            json.dumps(state["connections"], indent=2),
+            json.dumps(state.processors_data, indent=2),
+            json.dumps(state.error, indent=2),
+            json.dumps(state.connections, indent=2),
         )
 
         messages: list[AnyMessage] = [SystemMessage(oss_sytem_prompt)]
-        if state.get("nifi_flow_fix"):
-            previous_fixes_json = json.dumps(state["nifi_flow_fix"], indent=2, ensure_ascii=False)
+
+        if state.nifi_flow_fix:
+            previous_fixes_json = json.dumps(state.nifi_flow_fix, indent=2, ensure_ascii=False)
             messages.append(SystemMessage(content=previus_steps.format(previousFixesJson=previous_fixes_json)))
+
         messages.append(HumanMessage(prompt))
 
         async with service.get_tools() as tools:
@@ -123,19 +124,17 @@ class NifiGraph(StateGraph[FlowState]):
             tool_calls: list[ToolCall] = self._response_tool_calls(response, state, service)
 
         await asyncio.sleep(settings.GRAPH_DELAY * 60) #убрать
-        return {
-            "nifi_flow_fix": tool_calls,
-            "connections": state["connections"],
-            "error": state["error"],
-            "processors_data": state["processors_data"],
-        }
+        return FlowState(nifi_flow_fix=tool_calls,
+                         connections=state.connections,
+                         error=state.error,
+                         processors_data=state.processors_data)
 
     def _response_tool_calls(
         self, response: dict[str, Any] | Any, state: FlowState, service: NifiServerService
     ) -> list[ToolCall]:
         tool_calls: list[ToolCall] = []
-        if state.get("nifi_flow_fix"):
-            tool_calls = state["nifi_flow_fix"]
+        if state.nifi_flow_fix:
+            tool_calls = state.nifi_flow_fix
 
         for msg in response["messages"]:
             if isinstance(msg, AIMessage) and msg.tool_calls:
@@ -160,4 +159,4 @@ class NifiGraph(StateGraph[FlowState]):
         self.add_conditional_edges("data_node", self._should_continue, {"flow_correction": "flow_correction", END: END})
         self.add_edge("flow_correction", "data_node")
 
-        return cast(CompiledStateGraph[FlowState, None, FlowState, FlowState], self.compile())
+        return self.compile()
