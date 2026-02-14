@@ -7,10 +7,10 @@ from typing import TypeVar
 from pydantic import BaseModel
 
 
-SettingsT = TypeVar("SettingsT")
+SettingsT = TypeVar("SettingsT", bound=object)
 
 
 class BaseManager[SettingsT](ABC):
     @abstractmethod
-    async def graph_invoke(self, settings: SettingsT) -> BaseModel | None:
-        raise NotImplementedError
+    async def graph_ainvoke(self, settings: SettingsT) -> BaseModel | None:
+        pass

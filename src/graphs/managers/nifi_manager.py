@@ -8,9 +8,9 @@ from langchain_core.runnables import RunnableConfig
 from langgraph.graph.state import CompiledStateGraph
 from pydantic import BaseModel
 
+from graphs.managers.base_manager import BaseManager
+from graphs.managers.settings.nifi_agent_settings import NifiAgentSettings
 from graphs.state.nifi_graph_state import FlowState
-from managers.base_manager import BaseManager
-from managers.settings.nifi_agent_settings import NifiAgentSettings
 
 
 @final
@@ -21,7 +21,7 @@ class NifiGraphManager(BaseManager[NifiAgentSettings]):
         self._graph = graph
 
     @override
-    async def graph_invoke(self, settings: NifiAgentSettings) -> BaseModel | None:
+    async def graph_ainvoke(self, settings: NifiAgentSettings) -> BaseModel | None:
         config: RunnableConfig = RunnableConfig(configurable={"settings": settings})
 
         await self._graph.ainvoke(cast(FlowState, {}), config=config)

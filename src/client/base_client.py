@@ -3,8 +3,8 @@ from __future__ import annotations
 from abc import ABC
 from abc import abstractmethod
 from contextlib import asynccontextmanager
-from typing import Any
 from typing import AsyncIterator
+from typing import Sequence
 
 from pydantic import BaseModel
 
@@ -16,6 +16,11 @@ class Tool(BaseModel):
 
 
 class McpClient(ABC):
+    def __init__(self, server_name: str):
+        super().__init__()
+        self._server_name: str = server_name
+
+
     @classmethod
     @abstractmethod
     async def connect(
@@ -41,10 +46,10 @@ class McpClient(ABC):
 
     @abstractmethod
     @asynccontextmanager
-    async def session(self) -> AsyncIterator[Any]:
-        yield
+    async def session(self) -> AsyncIterator[object]:
+        yield object()
 
     @abstractmethod
     @asynccontextmanager
-    async def tools(self) -> AsyncIterator[list[Any]]:
+    async def tools(self) -> AsyncIterator[Sequence[object]]:
         yield []

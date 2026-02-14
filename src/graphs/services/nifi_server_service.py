@@ -6,6 +6,7 @@ from contextlib import asynccontextmanager
 from typing import Any
 from typing import AsyncIterator
 from typing import Final
+from typing import Sequence
 from typing import final
 
 from client.base_client import McpClient
@@ -76,6 +77,6 @@ class NifiServerService:
         return any(tool_name == _tool_name for _tool_name in self._DATA_TOOLS_NAMES)
 
     @asynccontextmanager
-    async def get_tools(self) -> AsyncIterator[list[Any]]:
+    async def get_tools(self) -> AsyncIterator[Sequence[object]]:
         async with self._client.tools() as tools:
             yield tools

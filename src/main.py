@@ -7,10 +7,10 @@ from langchain_together import ChatTogether
 
 import client as clnt
 
+from graphs.managers.nifi_manager import NifiGraphManager
+from graphs.managers.settings.nifi_agent_settings import NifiAgentSettings
 from graphs.nifi_graph import NifiGraph
-from managers.nifi_manager import NifiGraphManager
-from managers.settings.nifi_agent_settings import NifiAgentSettings
-from services.nifi_server_service import NifiServerService
+from graphs.services.nifi_server_service import NifiServerService
 from settings import settings
 
 
@@ -59,7 +59,7 @@ async def main() -> None:
     )  # type: ignore[call-arg]
     _settings = NifiAgentSettings(llm=llm, service=service)
 
-    await manager.graph_invoke(_settings)
+    await manager.graph_ainvoke(_settings)
 
 
 if __name__ == "__main__":

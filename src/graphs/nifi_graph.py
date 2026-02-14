@@ -30,12 +30,12 @@ from langgraph.graph.state import CompiledStateGraph
 from langgraph.types import Command
 from langgraph.types import RetryPolicy
 
+from graphs.managers.settings.nifi_agent_settings import NifiAgentSettings
 from graphs.prompts.nifi_graph_prompts import oss_sytem_prompt
 from graphs.prompts.nifi_graph_prompts import previus_steps
+from graphs.services.nifi_server_service import NifiServerService
 from graphs.state.nifi_graph_state import FlowState
 from logger import logger
-from managers.settings.nifi_agent_settings import NifiAgentSettings
-from services.nifi_server_service import NifiServerService
 from settings import settings
 
 
@@ -61,7 +61,8 @@ class NifiGraph(StateGraph[FlowState]):
         super().__init__(FlowState, config_schema)
         self._middleware = ToolMonitoringMiddleware()
 
-    async def _data_node(self, state: FlowState, config: RunnableConfig) -> FlowState:
+    @staticmethod
+    def _settings(config: RunnableConfig) -> NifiAgentSettings:
         _settings = config.get("configurable", {}).get("settings", None)
 
         if _settings is None:
@@ -75,7 +76,10 @@ class NifiGraph(StateGraph[FlowState]):
                 f"Configuration Error: Expected 'NifiAgentSettings', " f"but received '{type(_settings).__name__}'."
             )
 
-        service: NifiServerService = _settings.service
+        return _settings
+
+    async def _data_node(self, state: FlowState, config: RunnableConfig) -> FlowState:
+        service: NifiServerService = self._settings(config).service
 
         log_data: list[str] = await service.get_log_errors()
         processors_data: list[dict[str, str]] = await service.processors()
@@ -90,19 +94,7 @@ class NifiGraph(StateGraph[FlowState]):
         return "flow_correction"
 
     async def _flow_correction_node(self, state: FlowState, config: RunnableConfig) -> FlowState:
-        _settings = config.get("configurable", {}).get("settings", None)
-
-        if _settings is None:
-            raise ValueError(
-                "Configuration Error: 'settings' not found in RunnableConfig. "
-                "Ensure that NifiAgentSettings is passed during graph invocation."
-            )
-
-        if not isinstance(_settings, NifiAgentSettings):
-            raise TypeError(
-                f"Configuration Error: Expected 'NifiAgentSettings', " f"but received '{type(_settings).__name__}'."
-            )
-
+        _settings = self._settings(config)
         service: NifiServerService = _settings.service
         llm: BaseChatModel = _settings.llm
 
@@ -117,17 +109,20 @@ class NifiGraph(StateGraph[FlowState]):
             previous_fixes_json = json.dumps(state["nifi_flow_fix"], indent=2, ensure_ascii=False)
             messages.append(SystemMessage(content=previus_steps.format(previousFixesJson=previous_fixes_json)))
         messages.append(HumanMessage(prompt))
+
         async with service.get_tools() as tools:
             if not all(isinstance(t, BaseTool) for t in tools):
                 raise TypeError(f"Expected a list of tools, but got {type(tools).__name__}")
 
-            tools = self._filter_agent_tools(tools, service)
-            agent = create_agent(model=llm, tools=tools, middleware=[self._middleware])  # type: ignore[var-annotated]
+            tools_list: list[BaseTool] = [t for t in tools if isinstance(t, BaseTool)]
+
+            tools_list = self._filter_agent_tools(tools_list, service)
+            agent = create_agent(model=llm, tools=tools_list, middleware=[self._middleware])  # type: ignore[var-annotated]
 
             response = await agent.ainvoke({"messages": messages})  # type: ignore[arg-type]
             tool_calls: list[ToolCall] = self._response_tool_calls(response, state, service)
 
-        await asyncio.sleep(settings.GRAPH_DELAY * 60)
+        await asyncio.sleep(settings.GRAPH_DELAY * 60) #убрать
         return {
             "nifi_flow_fix": tool_calls,
             "connections": state["connections"],
@@ -164,4 +159,5 @@ class NifiGraph(StateGraph[FlowState]):
         self.add_edge(START, "data_node")
         self.add_conditional_edges("data_node", self._should_continue, {"flow_correction": "flow_correction", END: END})
         self.add_edge("flow_correction", "data_node")
-        return cast(CompiledStateGraph[FlowState, Any, FlowState, FlowState], self.compile())
+
+        return cast(CompiledStateGraph[FlowState, None, FlowState, FlowState], self.compile())

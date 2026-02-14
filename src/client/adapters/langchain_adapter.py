@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from contextlib import asynccontextmanager
 from typing import AsyncIterator
+from typing import Sequence
 from typing import override
 
 from langchain_core.documents.base import Blob
@@ -22,8 +23,7 @@ from client.client_solution.mcp_client_solution import McpClientSolution
 @McpClientSolution.register("nifi")
 class LangchainMcpAdapter(McpClient):
     def __init__(self, server_name: str) -> None:
-        super().__init__()
-        self._server_name: str = server_name
+        super().__init__(server_name)
         self._client: MultiServerMCPClient | None = None
 
     @property
@@ -89,7 +89,7 @@ class LangchainMcpAdapter(McpClient):
 
     @override
     @asynccontextmanager
-    async def tools(self) -> AsyncIterator[list[BaseTool]]:
+    async def tools(self) -> AsyncIterator[Sequence[BaseTool]]:
         async with self.client.session(self._server_name) as session:
             tools = await load_mcp_tools(session)
             yield tools

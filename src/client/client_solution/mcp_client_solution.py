@@ -26,14 +26,14 @@ class McpClientSolution:
         cwd: str | None = None,
         **kwargs: str
     ) -> McpClient:
-        client_class = cls._clients.get(name.lower())
+        client = cls._clients.get(name.lower())
 
-        if not client_class:
+        if not client:
             raise ValueError(
                 f"Client '{name}' not found."
             )
 
-        return await client_class.connect(
+        return await client.connect(
             server_name=server_name.lower(),
             server_script_path=server_script_path,
             cwd=cwd,
