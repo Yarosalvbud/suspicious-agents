@@ -15,19 +15,19 @@ from client.base_client import McpClient
 @final
 class NifiServerService:
     _LOG_PATH: Final = "file://app-log"
-    _PROCESSORS: Final = "listAllProcessors"
+    _PROCESSORS: Final = "list_all_processors"
     _CONNECTIONS: Final = "connections"
     _PROCESSOR: Final = "processor"
-    _PROCESSOR_TYPE_DESCRIPTION = "processorTypeDescription"
-    _DATA_TOOLS_NAMES: Final = ["connections", "listAllProcessors", "processor", "processorTypeDescription"]
-    _AGENT_PROMPT: Final = "agentPrompt"
+    _PROCESSOR_TYPE_DESCRIPTION = "processor_type_description"
+    _DATA_TOOLS_NAMES: Final = ["connections", "list_all_processors", "processor", "processor_type_description"]
+    _AGENT_PROMPT: Final = "agent_prompt"
     _AGENT_TOOLS_NAMES: Final = [
-        "processorTypeDescription",
-        "updateProcessorsProperties",
-        "addProcessor",
-        "addConnection",
-        "removeConnection",
-        "configureProcessor",
+        "processor_type_description",
+        "update_processors_properties",
+        "add_processor",
+        "add_connection",
+        "remove_connection",
+        "configure_processor",
     ]
 
     def __init__(self, client: McpClient) -> None:
@@ -65,7 +65,7 @@ class NifiServerService:
 
     async def agent_prompt(self, processors_desc: str, error: str, connections: str) -> str:
         prompt_args: dict[str, Any] = {
-            "processorsDesc": processors_desc,
+            "processors_desc": processors_desc,
             "error": error,
             "connections": connections,
         }
