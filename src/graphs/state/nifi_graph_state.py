@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from langchain_core.messages import AnyMessage
 from langchain_core.messages import ToolCall
 from pydantic import BaseModel
 from pydantic import Field
@@ -12,3 +13,4 @@ class FlowState(BaseModel):
     connections: list[dict[str, Any]] = Field(default_factory=list)
     error: list[str] = Field(default_factory=list)
     processors_data: list[dict[str, Any]] = Field(default_factory=list)
+    prompts: list[AnyMessage] = Field(default_factory=list)

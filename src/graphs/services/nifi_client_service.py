@@ -13,7 +13,7 @@ from client.base_client import McpClient
 
 
 @final
-class NifiServerService:
+class NifiClientService:
     _LOG_PATH: Final = "file://app-log"
     _PROCESSORS: Final = "list_all_processors"
     _CONNECTIONS: Final = "connections"
@@ -37,7 +37,7 @@ class NifiServerService:
     def agent_tools_names(self) -> list[str]:
         return self._AGENT_TOOLS_NAMES
 
-    async def get_log_errors(self) -> list[str]:
+    async def log_errors(self) -> list[str]:
         log_errors_raw = await self._client.resources([self._LOG_PATH])
 
         if isinstance(log_errors_raw[0], str):
@@ -77,6 +77,6 @@ class NifiServerService:
         return any(tool_name == _tool_name for _tool_name in self._DATA_TOOLS_NAMES)
 
     @asynccontextmanager
-    async def get_tools(self) -> AsyncIterator[Sequence[object]]:
+    async def get_tools_session(self) -> AsyncIterator[Sequence[object]]:
         async with self._client.tools() as tools:
             yield tools

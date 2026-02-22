@@ -3,14 +3,18 @@ from __future__ import annotations
 import asyncio
 import sys
 
+from uuid import uuid4
+
 from langchain_together import ChatTogether
 
 import client as clnt
 
+from graphs.checkpointer.psql_checkpointer import PostgresSaver
 from graphs.managers.nifi_manager import NifiGraphManager
 from graphs.managers.settings.nifi_agent_settings import NifiAgentSettings
+from graphs.managers.settings.session_settings import Session
 from graphs.nifi_graph import NifiGraph
-from graphs.services.nifi_server_service import NifiServerService
+from graphs.services.nifi_client_service import NifiClientService
 from settings import settings
 
 
@@ -47,9 +51,11 @@ async def main() -> None:
             NIFI_BASE_URL=settings.NIFI_BASE_URL,
         )
 
-    graph = NifiGraph().generate_graph()
+    checkpointer = await PostgresSaver.get_saver(url="postgresql://agent:agent_pass@localhost:5434/agent_storage")
+    graph = NifiGraph(checkpointer=checkpointer).create_graph()
+
     manager: NifiGraphManager = NifiGraphManager(graph)
-    service: NifiServerService = NifiServerService(client)
+    service: NifiClientService = NifiClientService(client)
 
     llm = ChatTogether(
         model=settings.LANGUAGE_MODEL_LINK,
@@ -57,9 +63,15 @@ async def main() -> None:
         temperature=1.0,
         top_p=1.0,
     )  # type: ignore[call-arg]
-    _settings = NifiAgentSettings(llm=llm, service=service)
 
-    await manager.graph_ainvoke(_settings)
+    session = Session(uuid=uuid4())
+    _settings = NifiAgentSettings(llm=llm, service=service)
+    result = await manager.graph_ainvoke(session, _settings)
+
+    while result:
+        print(result)
+        response = input()
+        result = await manager.graph_ainvoke(session, _settings, human_input=response)
 
 
 if __name__ == "__main__":

@@ -9,6 +9,7 @@ wheels/
 *.md
 .mypy_cache
 logs
+.ruff_cache
 
 # Virtual environments
 .venv

@@ -10,6 +10,7 @@ dependencies = [
     "langchain-mcp-adapters>=0.2.1",
     "langchain-together>=0.0.2.post1",
     "langgraph>=1.0.7",
+    "langgraph-checkpoint-postgres>=3.0.4",
     "mcp>=1.26.0",
     "mypy>=1.19.1",
     "pidantic>=0.1.2",
