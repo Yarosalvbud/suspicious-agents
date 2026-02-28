@@ -10,6 +10,7 @@ wheels/
 .mypy_cache
 logs
 .ruff_cache
+.vscode
 
 # Virtual environments
 .venv
