@@ -12,3 +12,6 @@ class Session:
 
 class GraphExecutionError(BaseModel):
     msg: str
+
+class GraphState(BaseModel):
+    is_working: bool

@@ -4,6 +4,9 @@ from typing import Literal
 from uuid import UUID
 
 from pydantic import BaseModel
+from pydantic import Field
+
+from graphs.middleware.tool_middleware import InterruptRequest as Interrupt
 
 
 class FixNifiRequest(BaseModel):
@@ -21,6 +24,7 @@ class InterruptRequest(BaseModel):
 class GraphErrorResponse(BaseModel):
     msg: str
 
-
-class NoErrorsResponse(BaseModel):
-    msg: str
+class InterruptResponse(BaseModel):
+    interrupt: Interrupt | None = Field(default=None)
+    graph_errors: GraphErrorResponse | None = Field(default=None)
+    is_task_ready: bool

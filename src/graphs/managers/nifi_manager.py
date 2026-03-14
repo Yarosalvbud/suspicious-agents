@@ -12,13 +12,15 @@ from graphs.managers.exceptions.nifi_exception import GraphError
 from graphs.managers.exceptions.nifi_exception import NoInterrupt
 from graphs.managers.settings.nifi_agent_settings import NifiAgentSettings
 from graphs.managers.settings.session_settings import GraphExecutionError
+from graphs.managers.settings.session_settings import GraphState
 from graphs.managers.settings.session_settings import Session
 from graphs.middleware.tool_middleware import InterruptRequest
 from graphs.state.nifi_graph_state import FlowState
 
 
 @final
-class NifiGraphManager(BaseManager[NifiAgentSettings, FlowState, InterruptRequest | GraphExecutionError | None]):
+class NifiGraphManager(BaseManager[NifiAgentSettings, FlowState,
+                                   InterruptRequest | GraphExecutionError | GraphState]):
     def __init__(self, graph: CompiledStateGraph[FlowState, None, FlowState, FlowState]) -> None:
         super().__init__(graph)
 
@@ -34,7 +36,7 @@ class NifiGraphManager(BaseManager[NifiAgentSettings, FlowState, InterruptReques
         else:
             await self._graph.ainvoke(FlowState(), config=config)
 
-    async def _get_state(self, config: RunnableConfig) -> InterruptRequest | GraphExecutionError | None:
+    async def _get_state(self, config: RunnableConfig) -> InterruptRequest | GraphExecutionError | GraphState:
         state = await self._graph.aget_state(config)
         for task in state.tasks:
             if task.error:
@@ -55,11 +57,12 @@ class NifiGraphManager(BaseManager[NifiAgentSettings, FlowState, InterruptReques
                 if isinstance(value, dict):
                     return InterruptRequest(**value)
 
-        return None
+
+        return GraphState(is_working=bool(state.next))
 
     @override
     async def interrupt(self, session: Session,
-                        settings: NifiAgentSettings) -> InterruptRequest | GraphExecutionError | None:
+                        settings: NifiAgentSettings) -> InterruptRequest | GraphExecutionError | GraphState:
         config: RunnableConfig = RunnableConfig(
             configurable={"thread_id": session.uuid, "settings": settings})
         return await self._get_state(config)

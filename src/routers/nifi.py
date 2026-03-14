@@ -23,7 +23,7 @@ from models.nifi import FixNifiRequest
 from models.nifi import FixNifiResponse
 from models.nifi import GraphErrorResponse
 from models.nifi import InterruptRequest
-from models.nifi import NoErrorsResponse
+from models.nifi import InterruptResponse
 
 
 router = APIRouter()
@@ -73,14 +73,14 @@ async def run_agent(
     return FixNifiResponse(session_token=session_id)
 
 
-@router.get("/interrupt", response_model=GraphErrorResponse | Interrupt | NoErrorsResponse)
+@router.get("/interrupt", response_model=InterruptResponse)
 @inject
 async def agent_interrupt(
     request: Request,
     interrupt_request: InterruptRequest,
     manager: NifiGraphManager = Depends(Provide[Container.manager]),  # noqa: B008
     settings: NifiAgentSettings = Depends(Provide[Container.settings])  # noqa: B008
-) -> GraphErrorResponse | Interrupt | NoErrorsResponse:
+) -> InterruptResponse:
 
     session = Session(uuid=interrupt_request.session_token)
 
@@ -88,13 +88,16 @@ async def agent_interrupt(
         response = await manager.interrupt(session, settings)
 
         if isinstance(response, GraphExecutionError):
-            return GraphErrorResponse(msg=response.msg)
+            return InterruptResponse(graph_errors=GraphErrorResponse(msg=response.msg),
+                                     is_task_ready=False)
 
         if isinstance(response, Interrupt):
-            return response
+            return InterruptResponse(
+                interrupt=response,
+                is_task_ready=False
+            )
 
-
-        return NoErrorsResponse(msg="Nifi flow работает корректно, ошибок не обнаружено")
+        return InterruptResponse(is_task_ready=not response.is_working)
     except Exception:
          raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
