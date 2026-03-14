@@ -22,5 +22,13 @@ class BaseManager[SettingsT: DataclassLike, GraphStateT: BaseModel, ResultT: Bas
         self._graph = graph
 
     @abstractmethod
-    async def graph_ainvoke(self, session: Session, settings: SettingsT, human_input: str | None = None) -> ResultT:
+    async def graph_ainvoke(self, session: Session, settings: SettingsT, human_input: str | None = None) -> None:
+        pass
+
+    @abstractmethod
+    async def interrupt(self, session: Session, settings: SettingsT) -> ResultT:
+        pass
+
+    @abstractmethod
+    async def verify_config(self, session: Session, settings: SettingsT, human_input: str | None = None) -> None:
         pass

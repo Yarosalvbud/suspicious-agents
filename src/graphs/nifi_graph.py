@@ -29,6 +29,7 @@ from graphs.prompts.nifi_graph_prompts import oss_sytem_prompt
 from graphs.prompts.nifi_graph_prompts import previus_steps
 from graphs.services.nifi_client_service import NifiClientService
 from graphs.state.nifi_graph_state import FlowState
+from logger import logger
 from settings import settings
 
 
@@ -45,6 +46,8 @@ class NifiGraph(StateGraph[FlowState, None, FlowState, FlowState]):
         log_data: list[str] = await service.log_errors()
         processors_data: list[dict[str, str]] = await service.processors()
         conn_data: list[dict[str, str]] = await service.connections()
+
+        logger.info(errors=log_data)
 
         return FlowState(error=log_data, processors_data=processors_data, connections=conn_data)
 
@@ -82,6 +85,8 @@ class NifiGraph(StateGraph[FlowState, None, FlowState, FlowState]):
                          messages=state.messages)
 
     async def _flow_correction_node(self, state: FlowState, config: RunnableConfig) -> FlowState:
+        logger.info(node="flow_correction")
+
         _settings = self._settings(config)
         service: NifiClientService = _settings.service
         llm: BaseChatModel = _settings.llm
@@ -118,6 +123,8 @@ class NifiGraph(StateGraph[FlowState, None, FlowState, FlowState]):
         return "postproc_node"
 
     async def _tool_call_node(self, state: FlowState, config: RunnableConfig) -> FlowState:
+        logger.info(node="tool_calls")
+
         _settings = self._settings(config)
         service: NifiClientService = _settings.service
         last_message = state.messages[-1]

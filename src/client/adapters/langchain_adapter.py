@@ -42,7 +42,7 @@ class LangchainMcpAdapter(McpClient):
         self._client = MultiServerMCPClient(
             connections={
                 self._server_name: StdioConnection(
-                    transport="stdio", command="python", args=[server_script_path], env=kwargs, cwd=cwd
+                    transport="stdio", command="python3", args=[server_script_path], env=kwargs, cwd=cwd
                 )
             }
         )
@@ -52,7 +52,6 @@ class LangchainMcpAdapter(McpClient):
     @override
     async def list_tools(self) -> list[Tool]:
         langchain_tools: list[BaseTool] = await self.client.get_tools(server_name=self._server_name)
-
         return [Tool(name=tool.name, description=tool.description, args=tool.args) for tool in langchain_tools]
 
     @override

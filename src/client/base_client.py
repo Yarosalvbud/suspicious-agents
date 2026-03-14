@@ -3,6 +3,7 @@ from __future__ import annotations
 from abc import ABC
 from abc import abstractmethod
 from contextlib import asynccontextmanager
+from typing import Any
 from typing import AsyncIterator
 from typing import Sequence
 
@@ -12,7 +13,7 @@ from pydantic import BaseModel
 class Tool(BaseModel):
     name: str
     description: str
-    args: dict[str, str]
+    args: dict[str, Any]
 
 
 class McpClient(ABC):

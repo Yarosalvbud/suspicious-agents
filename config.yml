@@ -1,0 +1,11 @@
+server:
+  path: "/Users/aroslavbudancev/Documents/Projects/NifiServer/mcp-nifi/src/nifi_server.py"
+  cwd: "/Users/aroslavbudancev/Documents/Projects/NifiServer/mcp-nifi/"
+  name: "nifi"
+  server_name: "nifi"
+checkpointer:
+  url: "postgresql://agent:agent_pass@localhost:5434/agent_storage"
+llm:
+  base_url: "https://api.together.xyz/v1/"
+  temperature: 1.0
+  top_p: 1.0

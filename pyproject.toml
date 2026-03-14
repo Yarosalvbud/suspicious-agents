@@ -6,9 +6,11 @@ readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
     "anthropic>=0.76.0",
-    "langchain>=1.2.7",
-    "langchain-mcp-adapters>=0.2.1",
-    "langchain-together>=0.0.2.post1",
+    "dependency-injector>=4.48.3",
+    "fastapi>=0.135.1",
+    "langchain-core>=1.2.0",
+    "langchain-mcp-adapters>=0.2.0",
+    "langchain-openai>=0.3.35",
     "langgraph>=1.0.7",
     "langgraph-checkpoint-postgres>=3.0.4",
     "mcp>=1.26.0",
@@ -16,6 +18,7 @@ dependencies = [
     "pidantic>=0.1.2",
     "pre-commit>=4.5.1",
     "python-dotenv>=1.2.1",
+    "slowapi>=0.1.9",
     "structlog>=25.5.0",
 ]
 

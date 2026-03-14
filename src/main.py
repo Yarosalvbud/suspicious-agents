@@ -1,78 +1,39 @@
 from __future__ import annotations
 
-import asyncio
-import sys
+from fastapi import FastAPI
+from fastapi import Request
+from fastapi.responses import Response
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
+from starlette.middleware.cors import CORSMiddleware
 
-from uuid import uuid4
-
-from langchain_together import ChatTogether
-
-import client as clnt
-
-from graphs.checkpointer.psql_checkpointer import PostgresSaver
-from graphs.managers.nifi_manager import NifiGraphManager
-from graphs.managers.settings.nifi_agent_settings import NifiAgentSettings
-from graphs.managers.settings.session_settings import Session
-from graphs.nifi_graph import NifiGraph
-from graphs.services.nifi_client_service import NifiClientService
-from settings import settings
+from container import Container
+from limiter import limiter
+from routers.nifi import router
 
 
-async def main() -> None:
-    num_params: int = len(sys.argv) - 1
-    if num_params not in (settings.CLIENT_MIN_PARAMS, settings.CLIENT_MAX_PARAMS):
-        raise RuntimeError("Usage: python3 <path-to-client> <nifi-server-path> <nifi-server-working-directory>")
+container = Container()
+container.config.from_yaml("config.yml")
 
-    client: clnt.McpClient | None = None
-    if num_params == settings.CLIENT_MIN_PARAMS:
-        client = await clnt.McpClientSolution.get_client(
-            name="nifi",
-            server_name="nifi",
-            server_script_path=sys.argv[1],
-            cwd=None,
-            LOG_FILE_PATH=settings.LOG_FILE_PATH,
-            NIFI_FLOW_FILE_PATH=settings.NIFI_FLOW_FILE_PATH,
-            LOG_LEVEL=settings.LOG_LEVEL,
-            MINUTES_DELTA=settings.MINUTES_DELTA,
-            CONTAINER_NAME=settings.CONTAINER_NAME,
-            NIFI_BASE_URL=settings.NIFI_BASE_URL,
-        )
-    else:
-        client = await clnt.McpClientSolution.get_client(
-            name="nifi",
-            server_name="nifi",
-            server_script_path=sys.argv[1],
-            cwd=sys.argv[2],
-            LOG_FILE_PATH=settings.LOG_FILE_PATH,
-            NIFI_FLOW_FILE_PATH=settings.NIFI_FLOW_FILE_PATH,
-            LOG_LEVEL=settings.LOG_LEVEL,
-            MINUTES_DELTA=settings.MINUTES_DELTA,
-            CONTAINER_NAME=settings.CONTAINER_NAME,
-            NIFI_BASE_URL=settings.NIFI_BASE_URL,
-        )
+container.wire(modules=["routers.nifi"])
 
-    checkpointer = await PostgresSaver.get_saver(url="postgresql://agent:agent_pass@localhost:5434/agent_storage")
-    graph = NifiGraph(checkpointer=checkpointer).create_graph()
+async def rate_limit_handler(request: Request, exc: Exception) -> Response:
+    assert isinstance(exc, RateLimitExceeded)
+    return _rate_limit_exceeded_handler(request, exc)
 
-    manager: NifiGraphManager = NifiGraphManager(graph)
-    service: NifiClientService = NifiClientService(client)
+app = FastAPI()
 
-    llm = ChatTogether(
-        model=settings.LANGUAGE_MODEL_LINK,
-        api_key=settings.TOGETHER_API_KEY.get_secret_value(),
-        temperature=1.0,
-        top_p=1.0,
-    )  # type: ignore[call-arg]
+app.container = container # type: ignore[attr-defined]
 
-    session = Session(uuid=uuid4())
-    _settings = NifiAgentSettings(llm=llm, service=service)
-    result = await manager.graph_ainvoke(session, _settings)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:80"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
-    while result:
-        print(result)
-        response = input()
-        result = await manager.graph_ainvoke(session, _settings, human_input=response)
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, rate_limit_handler)
 
-
-if __name__ == "__main__":
-    asyncio.run(main())
+app.include_router(router, prefix="/nifi")
