@@ -7,7 +7,6 @@ from pydantic_settings import SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    LANGUAGE_MODEL_LINK: str = Field(...)
     TOGETHER_API_KEY: SecretStr = Field(...)
     LOG_DIR: str = Field(...)
     LOGGER_LOG_LEVEL: str = Field(...)

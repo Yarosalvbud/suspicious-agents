@@ -48,7 +48,7 @@ class Container(containers.DeclarativeContainer):
 
     llm = providers.Singleton(
         ChatOpenAI,
-        model=settings.LANGUAGE_MODEL_LINK,
+        model=config.llm.name,
         base_url=config.llm.base_url,
         api_key=settings.TOGETHER_API_KEY.get_secret_value(),
         temperature=config.llm.temperature,

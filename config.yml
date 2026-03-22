@@ -6,6 +6,7 @@ server:
 checkpointer:
   url: "postgresql://agent:agent_pass@localhost:5434/agent_storage"
 llm:
+  name: Qwen/Qwen3-235B-A22B-Instruct-2507-tput
   base_url: "https://api.together.xyz/v1/"
-  temperature: 1.0
-  top_p: 1.0
+  temperature: 0.0
+  top_p: 0.1

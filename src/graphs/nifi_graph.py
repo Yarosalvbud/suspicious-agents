@@ -100,9 +100,11 @@ class NifiGraph(StateGraph[FlowState, None, FlowState, FlowState]):
         tools_list: list[BaseTool] = [
             t for t in tools if isinstance(t, BaseTool)]
         tools_list = self._filter_agent_tools(tools_list, service)
-        llm_with_tools = llm.bind_tools(tools=tools_list, tool_choice="any")
+        llm_with_tools = llm.bind_tools(tools=tools_list) #tool_choice="any"
         response = await llm_with_tools.ainvoke(state.messages)
 
+
+        logger.info(response=response)
         if not response.content: #bad boys bad boys
             response.content = '\n'
 
@@ -164,11 +166,12 @@ class NifiGraph(StateGraph[FlowState, None, FlowState, FlowState]):
                         result: ToolMessage = await tool.ainvoke(tool_call)
                         state.messages.append(result)
                     except Exception as e:
+                        logger.info(error=str(e))
                         state.messages.append(ToolMessage(
                             content=f"Error executing {tool_call['name']}: {e!s}. Please fix the input and try again.",
                             tool_call_id=tool_call["id"])
                         )
-
+        logger.info(messages=state.messages)
         await exit_stack.aclose()
         return FlowState(connections=state.connections,
                              error=state.error,
